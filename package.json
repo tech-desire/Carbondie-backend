@@ -1,0 +1,42 @@
+{
+  "name": "carbondie-backend",
+  "version": "1.0.0",
+  "description": "A robust and secure backend for Carbondie ",
+  "homepage": "https://github.com/tech-desire/Carbondie-backend#readme",
+  "bugs": {
+    "url": "https://github.com/tech-desire/Carbondie-backend/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tech-desire/Carbondie-backend.git"
+  },
+  "license": "ISC",
+  "author": "Techie",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "format": "prettier --write ."
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/node": "^26.1.2",
+    "tsx": "^4.23.1",
+    "typescript": "^7.0.2"
+  },
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3",
+    "mongoose": "^9.9.1"
+  }
+}
