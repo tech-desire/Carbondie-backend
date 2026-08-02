@@ -5,11 +5,12 @@ export enum UserRole {
   ADMIN = "admin",
 }
 
-export interface IUser extends Document {
+export interface IUser {
+  _id?: string;
   name: string;
   email: string;
   password: string;
-  phone:String;
+  phone: String;
   role: UserRole;
   avatar?: string;
   refreshToken?: string;
