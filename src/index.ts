@@ -1,8 +1,10 @@
-import routes from "./routes/index";
+
 import cors from "cors";
 import express from "express";
 import dotenv from "dotenv";
 import { connectDb } from "./utils/dbConnect";
+import authRouter from "./routes/authRouter";
+import productRouter from "./routes/productRoutes";
 
 const app = express();
 dotenv.config();
@@ -15,7 +17,8 @@ app.use(
 
 app.use(express.json());
 
-app.use("/api", routes);
+app.use("/api/auth", authRouter );
+app.use('/api/product',productRouter)
 
 connectDb();
 
