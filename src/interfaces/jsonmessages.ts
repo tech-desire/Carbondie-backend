@@ -1,5 +1,5 @@
 export interface IStatuscode_Json_Message {
     success:boolean
-    message:string
+    message:any
     data?:unknown
 }

@@ -1,21 +1,23 @@
 import { Request, Response } from "express";
 import bcrypt from "bcrypt";
 import { IStatuscode_Json_Message } from "../interfaces/jsonmessages";
-import { IUser, User } from "../models/user.model";
+import { User } from "../models/user.model";
 import jwt, { Secret } from "jsonwebtoken";
+import { IUser } from "../interfaces/userModelInterface";
+import { registerSchema } from "./auth.schema";
 
 export const signup = async (req: Request, res: Response) => {
-  const { name, email, phone, password } = req.body;
-
   try {
-    if (!name || !email || !phone || !password) {
+    const result = registerSchema.safeParse(req.body);
+    if (!result.success) {
       return res.status(400).json({
         success: false,
-        message: "All field are mandatory",
+        message: result.error,
       } as IStatuscode_Json_Message);
     }
-
-    let user: IUser | null = await User.findOne({ email });
+    const { email, phone, password } = result.data;
+    const normalizedEmail = email.toLowerCase().trim();
+    let user: IUser | null = await User.findOne({email: normalizedEmail });
 
     if (user) {
       return res.status(500).json({
@@ -25,13 +27,12 @@ export const signup = async (req: Request, res: Response) => {
       } as IStatuscode_Json_Message);
     }
 
-    const securePassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(password, 10);
 
     user = await User.create({
-      name,
-      email,
+      email:normalizedEmail,
       phone,
-      password: securePassword,
+      password: hashedPassword,
     });
 
     return res.status(201).json({
@@ -79,13 +80,16 @@ export const login = async (req: Request, res: Response) => {
     const token = jwt.sign(
       { id: user._id, role: user.role },
       process.env.JWT_SECRET as Secret,
-      { expiresIn : "7d"}
-    )
+      { expiresIn: "7d" },
+    );
 
-    return res.status(200).cookie('token',token).json({
-      success: true,
-      message: "Login successful",
-    } as IStatuscode_Json_Message);
+    return res
+      .status(200)
+      .cookie("token", token)
+      .json({
+        success: true,
+        message: "Login successful",
+      } as IStatuscode_Json_Message);
   } catch (error: any) {
     return res.status(404).json({
       success: false,
