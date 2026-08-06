@@ -1,9 +1,14 @@
-import mongoose, { Schema } from "mongoose";
+import mongoose from "mongoose";
+import { IUser } from "../interfaces/user.interface";
 
-import { IUser, UserRole } from "../interfaces/userModelInterface";
-
-const userSchema = new Schema<IUser>(
+const userSchema = new mongoose.Schema<IUser>(
   {
+    name: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+
     email: {
       type: String,
       required: true,
@@ -12,69 +17,43 @@ const userSchema = new Schema<IUser>(
       trim: true,
     },
 
+    phone: {
+      type: String,
+      trim: true,
+    },
+
     password: {
       type: String,
       required: true,
-      minlength: 5,
       select: false,
-    },
-    phone: {
-      type: String,
-      required: true,
-      unique: true,
     },
 
     role: {
       type: String,
-      enum: Object.values(UserRole),
-      default: UserRole.USER,
+      enum: ["user", "admin"],
+      default: "user",
     },
+
     isEmailVerified: {
       type: Boolean,
       default: false,
     },
-    twoFactorEnabled: {
+
+    isTwoFactorEnabled: {
       type: Boolean,
       default: false,
     },
+
     twoFactorSecret: {
-      type: Boolean,
-      default: false,
-    },
-    tokenVersion: {
       type: String,
-      default: undefined,
-    },
-    resetPasswordToken: {
-      type: String,
-      default: undefined,
-    },
-    resetPasswordExpires: {
-      type: Date,
-      default: undefined,
-    },
-    avatar: {
-      type: String,
-      default: null,
-    },
-    refreshToken: {
-      type: String,
-      select: false,
     },
 
-    passwordResetToken: {
-      type: String,
-      select: false,
-    },
-
-    passwordResetExpires: {
-      type: Date,
-      select: false,
-    },
+    lastLoginAt: Date,
   },
   {
     timestamps: true,
-  },
+    versionKey: false,
+  }
 );
 
 export const User = mongoose.model<IUser>("User", userSchema);
