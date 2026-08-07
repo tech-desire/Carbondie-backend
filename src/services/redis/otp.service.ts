@@ -1,12 +1,13 @@
 import bcrypt from "bcrypt";
 import { redisClient } from "../../config/redis";
+import {randomInt } from 'crypto'
 
 const OTP_TTL = 60 * 5;
 
 const getOtpKey = (email: string) => `emailOtp:${email}`;
 
 export const generateOtp = (): string => {
-  return Math.floor(100000 + Math.random() * 900000).toString();
+  return randomInt(100000, 999999).toString();
 };
 
 export const storeOtp = async (
