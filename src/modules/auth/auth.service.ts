@@ -1,6 +1,6 @@
 import { User } from "../../models/user.model";
 import { generateOtp, storeOtp } from "../../services/redis/otp.service";
-import { sendMail } from "../../services/mail/mail.service";
+import { sendMail, sendPasswordResetEmail } from "../../services/mail/mail.service";
 import { AppError } from "../../utils/AppError";
 import { verifyOtp } from "../../services/redis/otp.service";
 import { generateSignupToken } from "../../services/jwt/jwt.service";
@@ -10,6 +10,14 @@ import {
   generateAccessToken,
   generateRefreshToken,
 } from "../../services/jwt/jwt.service";
+import crypto from "crypto";
+import { redisClient } from "../../config/redis";
+import { env } from "../../config/env";
+
+
+
+
+
 
 export const sendOtp = async (email: string): Promise<void> => {
   const existingUser = await User.findOne({ email });
@@ -126,4 +134,31 @@ export const login = async (email: string, password: string) => {
     accessToken,
     // refreshToken,
   };
+};
+
+export const forgetPassword = async (email: string) => {
+  const user = await User.findOne({ email });
+
+  if (!user) {
+    return {
+      message: "If an account exits , a password reset link has been sent",
+    };
+  }
+
+  const resetToken = crypto.randomBytes(32).toString("hex");
+  const hashedToken = crypto
+    .createHash("sha256")
+    .update(resetToken)
+    .digest("hex");
+  const redisKey = `passwordReset:${hashedToken}`;
+
+  await redisClient.set(
+    redisKey,
+    JSON.stringify({ userId: user._id.toString() }),
+    { EX: 10 * 60 },
+  );
+ const resetUrl = `${env.frontendUrl}/reset-password?token=${resetToken}`
+
+ await sendPasswordResetEmail(user.email,resetUrl);
+
 };
