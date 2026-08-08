@@ -3,21 +3,20 @@ import bcrypt from "bcrypt";
 import { IStatuscode_Json_Message } from "../interfaces/jsonmessages";
 import { User } from "../models/user.model";
 import jwt, { Secret } from "jsonwebtoken";
-import { IUser } from "../interfaces/userModelInterface";
 import { registerSchema } from "./auth.schema";
 
 export const signup = async (req: Request, res: Response) => {
   try {
-    const result = registerSchema.safeParse(req.body);
-    if (!result.success) {
+    const SignupData = registerSchema.safeParse(req.body);
+    if (!SignupData.success) {
       return res.status(400).json({
         success: false,
-        message: result.error,
+        message: SignupData.error,
       } as IStatuscode_Json_Message);
     }
-    const { email, phone, password } = result.data;
-    const normalizedEmail = email.toLowerCase().trim();
-    let user: IUser | null = await User.findOne({email: normalizedEmail });
+    const { name,email, phone, password } = SignupData.data;
+    const normalizedEmail = email.toLowerCase().trim(); 
+    let user = await User.findOne({email: normalizedEmail });
 
     if (user) {
       return res.status(500).json({
@@ -30,6 +29,7 @@ export const signup = async (req: Request, res: Response) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     user = await User.create({
+      name,
       email:normalizedEmail,
       phone,
       password: hashedPassword,
@@ -59,7 +59,7 @@ export const login = async (req: Request, res: Response) => {
     }
 
     let finduser = email ? { email } : { phone };
-    let user: IUser | null = await User.findOne(finduser).select("+password");
+    let user = await User.findOne(finduser).select("+password");
 
     if (!user) {
       return res.status(400).json({
