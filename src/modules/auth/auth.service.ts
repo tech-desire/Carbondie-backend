@@ -1,6 +1,6 @@
 import { User } from "../../models/user.model";
 import { generateOtp, storeOtp } from "../../services/redis/otp.service";
-import { sendMail, sendPasswordResetEmail } from "../../services/mail/mail.service";
+import { sendMail } from "../../services/mail/mail.service";
 import { AppError } from "../../utils/AppError";
 import { verifyOtp } from "../../services/redis/otp.service";
 import { generateSignupToken } from "../../services/jwt/jwt.service";
@@ -10,14 +10,12 @@ import {
   generateAccessToken,
   generateRefreshToken,
 } from "../../services/jwt/jwt.service";
-import crypto from "crypto";
+import {
+  getResetPasswordToken,
+  resetPasswordToken,
+} from "../../services/redis/password-reset.service";
+import { sendPasswordResetEmail } from "../../services/mail/mail.service";
 import { redisClient } from "../../config/redis";
-import { env } from "../../config/env";
-
-
-
-
-
 
 export const sendOtp = async (email: string): Promise<void> => {
   const existingUser = await User.findOne({ email });
@@ -136,29 +134,52 @@ export const login = async (email: string, password: string) => {
   };
 };
 
-export const forgetPassword = async (email: string) => {
+export const forgotPassword = async (email: string) => {
   const user = await User.findOne({ email });
 
   if (!user) {
     return {
-      message: "If an account exits , a password reset link has been sent",
+      message: "If an account exists, a password reset link has been sent.",
     };
   }
+  const resetUrl = await resetPasswordToken(user._id.toString());
 
-  const resetToken = crypto.randomBytes(32).toString("hex");
-  const hashedToken = crypto
-    .createHash("sha256")
-    .update(resetToken)
-    .digest("hex");
-  const redisKey = `passwordReset:${hashedToken}`;
+  await sendPasswordResetEmail(user.email, resetUrl);
 
-  await redisClient.set(
-    redisKey,
-    JSON.stringify({ userId: user._id.toString() }),
-    { EX: 10 * 60 },
-  );
- const resetUrl = `${env.frontendUrl}/reset-password?token=${resetToken}`
+  return {
+    message: "If an account exists, a password reset link has been sent.",
+  };
+};
 
- await sendPasswordResetEmail(user.email,resetUrl);
+export const resetPassword = async (token: string, password:string) => {
+  const resetData = await getResetPasswordToken(token);
 
+  if (!resetData) {
+    throw new AppError(400, "Invalid or expired password reset link");
+  }
+
+  const { userId } = JSON.parse(resetData);
+
+  const user = await User.findById(userId);
+
+  if (!user) {
+    throw new AppError(400, "Invalid or expired password reset link");
+  }
+
+  const hashedPassword = await bcrypt.hash(password, 12);
+
+  user.password = hashedPassword;
+
+  await user.save();
+
+  await redisClient.del(redisKey);
+  
+  const accessToken = generateAccessToken({
+    userId: user._id.toString(),
+    email: user.email,
+  });
+  return{
+    accessToken,
+    user
+  }
 };

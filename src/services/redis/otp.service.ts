@@ -1,6 +1,6 @@
 import bcrypt from "bcrypt";
 import { redisClient } from "../../config/redis";
-import {randomInt } from 'crypto'
+import { randomInt } from "crypto";
 
 const OTP_TTL = 60 * 5;
 
@@ -10,10 +10,7 @@ export const generateOtp = (): string => {
   return randomInt(100000, 999999).toString();
 };
 
-export const storeOtp = async (
-  email: string,
-  otp: string
-): Promise<void> => {
+export const storeOtp = async (email: string, otp: string): Promise<void> => {
   const hashedOtp = await bcrypt.hash(otp, 10);
 
   await redisClient.set(getOtpKey(email), hashedOtp, {
@@ -23,7 +20,7 @@ export const storeOtp = async (
 
 export const verifyOtp = async (
   email: string,
-  otp: string
+  otp: string,
 ): Promise<boolean> => {
   const storedOtp = await redisClient.get(getOtpKey(email));
 

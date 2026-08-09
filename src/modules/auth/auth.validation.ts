@@ -28,8 +28,9 @@ export const loginSchema = z.object({
   password: z.string().min(1),
 });
 
-export const forgetPasswordSchema = z.object({
-  email: z.string().email("Invalid email"),
+
+export const forgotPasswordSchema = z.object({
+  email: z.string().email("Invalid email address"),
 });
 
 export const resetPasswordSchema = z
