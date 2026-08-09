@@ -13,9 +13,9 @@ import {
 import {
   getResetPasswordToken,
   resetPasswordToken,
+  deleteResetPasswordToken,
 } from "../../services/redis/password-reset.service";
 import { sendPasswordResetEmail } from "../../services/mail/mail.service";
-import { redisClient } from "../../config/redis";
 
 export const sendOtp = async (email: string): Promise<void> => {
   const existingUser = await User.findOne({ email });
@@ -151,19 +151,22 @@ export const forgotPassword = async (email: string) => {
   };
 };
 
-export const resetPassword = async (token: string, password:string) => {
+export const resetPassword = async (token: string, password: string) => {
   const resetData = await getResetPasswordToken(token);
 
   if (!resetData) {
     throw new AppError(400, "Invalid or expired password reset link");
   }
 
-  const { userId } = JSON.parse(resetData);
-
-  const user = await User.findById(userId);
+  const user = await User.findById(resetData.userId).select("+password");
 
   if (!user) {
     throw new AppError(400, "Invalid or expired password reset link");
+  }
+  const isSamePassword = await bcrypt.compare(password, user.password);
+
+  if (isSamePassword) {
+    throw new AppError(400, "New password must be different");
   }
 
   const hashedPassword = await bcrypt.hash(password, 12);
@@ -172,14 +175,16 @@ export const resetPassword = async (token: string, password:string) => {
 
   await user.save();
 
-  await redisClient.del(redisKey);
-  
+  // Token can no longer be reused
+  await deleteResetPasswordToken(token);
+
   const accessToken = generateAccessToken({
     userId: user._id.toString(),
     email: user.email,
   });
-  return{
+
+  return {
     accessToken,
-    user
-  }
+    user,
+  };
 };

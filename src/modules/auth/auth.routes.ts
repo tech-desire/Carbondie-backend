@@ -6,7 +6,8 @@ import {
   verifyOtpSchema,
   signupSchema,
   loginSchema,
-  forgotPasswordSchema,resetPasswordSchema
+  forgotPasswordSchema,
+  resetPasswordSchema,
 } from "./auth.validation";
 import { authenticate } from "../../middleware/authmiddleware";
 
@@ -22,9 +23,10 @@ router.post(
   authController.forgotPasswordController,
 );
 router.post(
-  "/forgot-password",
-  validate(resetPasswordSchema ),
-  authController.resetPasswordController);
+  "/reset-password",
+  validate(resetPasswordSchema),
+  authController.resetPasswordController,
+);
 router.get("/me", authenticate, (req, res) => {
   res.json({
     success: true,
