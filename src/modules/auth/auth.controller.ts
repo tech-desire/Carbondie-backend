@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import * as authService from "./auth.service";
 import { env } from "../../config/env";
+import { forgotPassword,resetPassword } from "./auth.service";
 
 const cookieOptions = {
   httpOnly: true,
@@ -58,11 +59,34 @@ export const login = async (req: Request, res: Response) => {
   });
 };
 
-export const forgetPassword = async(req:Request, res:Response)=>{
-const {email} = req.body;
-const result = await authService.forgetPassword(email);
+export const forgotPasswordController = async (
+  req: Request,
+  res: Response
+) => {
+  const { email } = req.body;
 
-res.status(200).json(result);
+  const result = await forgotPassword(email);
 
+  res.status(200).json(result);
+};
 
-}
+export const resetPasswordController = async (
+  req: Request,
+  res: Response
+) => {
+  const { token, password } = req.body;
+
+  const result = await resetPassword(token, password);
+
+  res.cookie("accessToken", result.accessToken, {
+    httpOnly: true,
+    secure: env.nodeEnv === "production",
+    sameSite: "lax",
+    maxAge: 14 * 24 * 60 * 60 * 1000,
+  });
+
+  res.status(200).json({
+    message: "Password reset successfully. You are now logged in.",
+    user: result.user,
+  });
+};

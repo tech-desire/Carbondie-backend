@@ -5,7 +5,8 @@ import {
   sendOtpSchema,
   verifyOtpSchema,
   signupSchema,
-  loginSchema,forgetPasswordSchema
+  loginSchema,
+  forgotPasswordSchema,resetPasswordSchema
 } from "./auth.validation";
 import { authenticate } from "../../middleware/authmiddleware";
 
@@ -15,7 +16,15 @@ router.post("/send-otp", validate(sendOtpSchema), authController.sendOtp);
 router.post("/verify-otp", validate(verifyOtpSchema), authController.verifyOtp);
 router.post("/signup", validate(signupSchema), authController.signup);
 router.post("/login", validate(loginSchema), authController.login);
-router.post('/forget-password',validate(forgetPasswordSchema),authController.forgetPassword )
+router.post(
+  "/forget-password",
+  validate(forgotPasswordSchema),
+  authController.forgotPasswordController,
+);
+router.post(
+  "/forgot-password",
+  validate(resetPasswordSchema ),
+  authController.resetPasswordController);
 router.get("/me", authenticate, (req, res) => {
   res.json({
     success: true,
